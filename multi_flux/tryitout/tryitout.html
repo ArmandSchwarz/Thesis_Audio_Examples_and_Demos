@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two-stream attention · Try it out</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:white;color:#18352f;font:17px/1.7 system-ui,sans-serif}main{padding:28px}h1{font:400 30px/1.2 Georgia,serif;margin:0 0 15px}p{color:#626e68}button,select{font:inherit;font-size:15px;border:1px solid #dce2d9;border-radius:9px;padding:10px 16px;background:white;color:#18352f}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #b66d28;outline-offset:4px}.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.primary{background:#27715c;color:white;padding:10px 28px}.key{background:#f8f7f2;border:1px solid #ccd6ce;border-bottom-width:3px;border-radius:5px;padding:0 8px}.stage{position:relative;background:#f8f7f2;border:1px solid #dce2d9;border-radius:12px;min-height:230px;margin:22px 0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;outline:none}.cross{font-size:58px;line-height:1;color:#18352f;font-weight:300}.feedback{position:absolute;bottom:25px;font-size:19px;min-height:30px}.feedback.correct{color:#27715c}.feedback.incorrect{color:#a44234}.feedback.missed{color:#9a6a14}.status{font-size:14px;margin:16px 0;min-height:24px}.results{border-radius:12px;background:#edf1e9;padding:22px;margin-top:20px}.results h2{font-size:21px;margin:0 0 12px}.results p{margin:6px 0;color:#18352f}.results[hidden],[hidden]{display:none}.csv-picker{font-size:14px;padding:15px;border:1px dashed #dce2d9;border-radius:10px;margin:15px 0}.csv-picker label{display:block;margin-bottom:8px}progress{width:100%;accent-color:#27715c;height:7px}.help{font-size:14px}.selected-label{font-size:14px}.time{font-size:13px;color:#626e68}@media(max-width:550px){main{padding:18px}select{max-width:100%;width:100%}.stage{min-height:200px}}
+</style>
+</head>
+<body><main>
+<h1>Try it out</h1>
+<p>Focus on the sound stream that starts first. Press the <span class="key">space bar</span> when you detect a large, unusual change in that stream. Ignore changes in the other stream. Please choose first the trial, either single stream (there will be no second stream to ignore) or one of the two dual stream. There is imediate feedback in this example, as in the training done by the participants. No data is reccorded.</p>
+<label for="trial-choice" class="selected-label">Choose a trial</label>
+<div class="controls">
+<select id="trial-choice"><option value="1">Trial single stream</option><option value="2">Trial dual stream 1</option><option value="3">Trial dual stream 2</option></select>
+<button id="go" class="primary" type="button">Go</button><button id="stop" type="button" disabled>Stop</button>
+</div>
+<p class="status" id="status" role="status">Choose a trial, then click Go.</p>
+<div class="stage" id="stage" tabindex="-1" aria-label="Listening task"><span id="cross" class="cross" aria-hidden="true" hidden>+</span><span id="feedback" class="feedback" role="status"></span></div>
+<progress id="progress" max="1" value="0" aria-label="Trial progress"></progress><span class="time" id="time"></span>
+<p class="help">Responses are accepted within approximately 1.5 seconds after each target. Each target can be detected once.</p>
+<section class="results" id="results" hidden aria-labelledby="results-title"><h2 id="results-title">Trial complete</h2><p id="score"></p><p id="misses"></p><p id="false-alarms"></p><p>Click Go to repeat this trial, or choose another trial above.</p></section>
+</main><script>
+// Scoring uses the audio playback position. No responses are saved or sent.
+const RESPONSE_WINDOW = 1.5;
+function createScore(times) {
+  return {targets:times.map(time => ({time,state:'pending'})),hits:0,falseAlarms:0,misses:0};
+}
+function expireTargets(score, time) {
+  let missed = 0;
+  score.targets.forEach(target => {
+    if (target.state === 'pending' && time > target.time + RESPONSE_WINDOW) {
+      target.state = 'missed'; score.misses++; missed++;
+    }
+  });
+  return missed;
+}
+function scoreResponse(score, time) {
+  expireTargets(score,time);
+  const target=score.targets.find(target => target.state === 'pending' && time >= target.time && time <= target.time + RESPONSE_WINDOW);
+  if (target) {target.state='hit';score.hits++;return true;}
+  score.falseAlarms++;return false;
+}
+const choice=document.getElementById('trial-choice'),go=document.getElementById('go'),stop=document.getElementById('stop');
+const status=document.getElementById('status'),cross=document.getElementById('cross'),feedback=document.getElementById('feedback'),stage=document.getElementById('stage');
+const results=document.getElementById('results'),progress=document.getElementById('progress'),timeLabel=document.getElementById('time');
+// Exact target times embedded from the three supplied CSV files.
+const targetCache=new Map(Object.entries({
+  "1": [
+    7.925490085909733,
+    15.14334712843467,
+    19.2476187800665,
+    22.50273077963657,
+    26.89005564862231,
+    32.40959338702373,
+    39.76897703822563,
+    45.99614782001185,
+    51.51568555841327,
+    57.03522329681469,
+    62.55476103521612,
+    67.22513912155578,
+    74.44299616408071,
+    78.97184764174342,
+    82.93459268469829,
+    87.03886433633012
+  ],
+  "2": [
+    7.363325246465893,
+    12.642690517516913,
+    18.47777844867856,
+    25.56324236508914,
+    31.12046896619547,
+    36.39983423724649,
+    40.15096219299326,
+    47.23642610940384,
+    55.01654335095271,
+    60.43483928703139,
+    64.60275923786114,
+    68.77067918869088,
+    73.63325246465892,
+    79.46834039582058,
+    86.41487364720349
+  ],
+  "3": [
+    7.675806606207113,
+    14.689905746361887,
+    17.86610158341311,
+    24.88020072356788,
+    28.321079547040036,
+    33.217714795827334,
+    37.187959592141354,
+    40.36415542919257,
+    44.59908321192753,
+    52.539572804555576,
+    59.95069642434176,
+    64.58264868670813,
+    70.93504036081055,
+    76.49338307565019,
+    81.39001832443748,
+    85.49260461396197,
+    90.91860583559114
+  ]
+}));
+let audio=null,score=null,running=false,loading=false,session=0,ticker=null,blinkTimer=null,feedbackTimer=null,endedAt=null;
+function reportHeight(){window.parent.postMessage({type:'multi-tryout-height',height:Math.ceil(document.body.getBoundingClientRect().height)},'*');}
+new ResizeObserver(reportHeight).observe(document.body);
+function elapsed(){return audio ? audio.currentTime + (endedAt===null ? 0 : (performance.now()-endedAt)/1000) : 0;}
+function showFeedback(text,kind){clearTimeout(feedbackTimer);feedback.textContent=text;feedback.className='feedback '+kind;feedbackTimer=setTimeout(()=>{feedback.textContent='';},1000);}
+function releaseAudio(){
+  if(audio){audio.onended=null;audio.onerror=null;audio.pause();audio.removeAttribute('src');audio.load();audio=null;}
+}
+function cancel(message){
+  session++;running=false;loading=false;clearInterval(ticker);clearTimeout(blinkTimer);clearTimeout(feedbackTimer);endedAt=null;
+  releaseAudio();cross.hidden=true;cross.style.visibility='visible';feedback.textContent='';
+  choice.disabled=false;go.disabled=false;stop.disabled=true;
+  if(message)status.textContent=message;
+}
+function finish(){
+  expireTargets(score,Infinity);
+  running=false;clearInterval(ticker);clearTimeout(blinkTimer);cross.hidden=true;feedback.textContent='';
+  choice.disabled=false;go.disabled=false;stop.disabled=true;
+  results.hidden=false;
+  document.getElementById('score').textContent=score.hits+' correct responses out of '+score.targets.length+' targets.';
+  document.getElementById('misses').textContent=score.misses+' missed targets.';
+  document.getElementById('false-alarms').textContent=score.falseAlarms+' false alarms.';
+  status.textContent='Trial complete. Try the same trial again or choose another one.';
+  progress.value=1;
+  releaseAudio();reportHeight();
+}
+function tick(){
+  if(!running || !audio)return;
+  const time=elapsed();
+  if(expireTargets(score,time))showFeedback('Missed','missed');
+  if(Number.isFinite(audio.duration)){
+    progress.value=Math.min(1,audio.currentTime/audio.duration);
+    timeLabel.textContent=Math.floor(Math.min(time,audio.duration))+' / '+Math.ceil(audio.duration)+' s';
+  }
+  const finalDeadline=score.targets[score.targets.length-1].time+RESPONSE_WINDOW;
+  if(endedAt!==null && time>finalDeadline)finish();
+}
+async function start(){
+  cancel();const token=session,trial=choice.value;
+  loading=true;choice.disabled=true;go.disabled=true;stop.disabled=false;results.hidden=true;progress.value=0;timeLabel.textContent='';
+  status.textContent='Loading trial…';
+  try{
+    const times=targetCache.get(trial);
+    if(!times)throw new Error('No target times are available for this trial.');
+    if(token!==session)return;
+    score=createScore(times);endedAt=null;
+    audio=new Audio('data/son/trial'+trial+'.wav');const player=audio;
+    player.onerror=()=>{if(token===session)cancel('Unable to play trial'+trial+'.wav. Check the audio file.');};
+    player.addEventListener('loadedmetadata',()=>{
+      if(token!==session)return;
+      if(times.some(time=>time>player.duration))cancel('A target time is beyond the end of this audio file. Check that the CSV matches the trial.');
+    },{once:true});
+    player.onended=()=>{if(token===session){endedAt=performance.now();tick();}};
+    window.parent.postMessage({type:'multi-tryout-audio'},'*');
+    await player.play();
+    if(token!==session)return;
+    loading=false;running=true;cross.hidden=false;stage.focus();status.textContent='Listen and press the space bar for targets.';
+    ticker=setInterval(tick,20);
+  }catch(error){
+    if(token!==session)return;
+    cancel(error.message || 'Unable to start the trial.');
+    reportHeight();
+  }
+}
+go.addEventListener('click',start);
+stop.addEventListener('click',()=>cancel('Trial stopped. Click Go to start again.'));
+choice.addEventListener('change',()=>{cancel('Choose a trial, then click Go.');results.hidden=true;progress.value=0;timeLabel.textContent='';});
+document.addEventListener('keydown',event=>{
+  if(event.code!=='Space' || !running)return;
+  event.preventDefault();event.stopPropagation();if(event.repeat)return;
+  const correct=scoreResponse(score,elapsed());
+  showFeedback(correct?'Correct response':'Incorrect response',correct?'correct':'incorrect');
+  clearTimeout(blinkTimer);cross.style.visibility='hidden';blinkTimer=setTimeout(()=>{cross.style.visibility='visible';},10);
+},true);
+window.addEventListener('message',event=>{
+  if(event.source===window.parent && event.data?.type==='pause-multi-tryout' && (running||loading))cancel('Trial stopped because another audio example was started. Click Go to restart.');
+});
+reportHeight();
+</script></body></html>

@@ -1,0 +1,121 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Local-global · Try it out</title><style>    .tryout { margin-top:40px; background:white; border:1px solid var(--line); border-radius:14px; padding:28px; }
+    .tryout h3 { margin:0 0 12px; font-family:Georgia,serif; font-weight:400; font-size:30px; }
+    .trial-top { display:flex; justify-content:space-between; gap:14px; min-height:32px; margin:18px 0; flex-wrap:wrap; }
+    .contrast-note { color:var(--accent); font-size:14px; font-weight:600; }
+    .trial-status { color:var(--muted); font-size:14px; }
+    .go-button { background:var(--accent); color:white; padding:10px 32px; }
+    .answer-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:22px 0; }
+    .answer-options button { border-radius:10px; text-align:left; padding:14px; }
+    .trial-feedback { padding:18px; border-radius:10px; background:#edf1e9; }
+    .trial-feedback.incorrect { background:#faf0e6; }
+    .trial-feedback p { margin:0; }
+    .replay-options { display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+    @media(max-width:600px) { .tryout { padding:18px; } .answer-options { grid-template-columns:1fr; } }
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#18352f;font:17px/1.7 system-ui,sans-serif;--ink:#18352f;--muted:#626e68;--line:#dce2d9;--accent:#27715c}button{font:inherit;font-size:14px;cursor:pointer;padding:9px 16px;border:1px solid var(--line);border-radius:22px;color:var(--ink);background:white}button:disabled{opacity:.45;cursor:default}button:focus-visible{outline:3px solid #b66d28;outline-offset:4px}.description{max-width:720px;color:var(--muted)}.tryout{margin-top:0;border:0;border-radius:0}</style></head><body>      <section class="tryout" id="local-global-tryout" aria-labelledby="tryout-title">
+        <h3 id="tryout-title">Try it out</h3>
+        <p class="description">Click Go to listen to a randomly selected example and compare the local and global pitch patterns of the two melodies. Select the type of difference you hear. You can only listen once to the stimuli before giving your answer. After the feedback you can listen again to the stimuli in the normal-hearing listening condition or in the simulated aided hearing-impaired listening condition.</p>
+        <div class="trial-top">
+          <span class="contrast-note" id="trial-contrast" hidden>This trial is with a local contrast modification</span>
+          <span class="trial-status" id="trial-status" role="status">Ready when you are.</span>
+        </div>
+        <button type="button" class="go-button" id="trial-go">Go</button>
+        <div class="answer-options" role="group" aria-label="Difference between the two melodies">
+          <button type="button" data-answer="no" disabled>No difference</button>
+          <button type="button" data-answer="local" disabled>Local difference</button>
+          <button type="button" data-answer="global" disabled>Global difference</button>
+          <button type="button" data-answer="LG" disabled>Local and Global difference</button>
+        </div>
+        <div class="trial-feedback" id="trial-feedback" role="status" hidden>
+          <p id="trial-feedback-text"></p>
+          <div class="replay-options">
+            <button type="button" id="trial-replay">Listen to NH</button>
+            <button type="button" id="trial-compare">Listen to aHI</button>
+          </div>
+        </div>
+      </section><script>    // Sixteen examples: eight sound patterns, each in NH and aHI versions.
+    const trialFiles = ['local', 'global', 'no', 'LG', 'local_aS', 'global_aS', 'no_aS', 'LG_aS'];
+    const answerLabels = {no:'No difference', local:'Local difference', global:'Global difference', LG:'Local and Global difference'};
+    const answerButtons = Array.from(document.querySelectorAll('[data-answer]'));
+    const trialStatus = document.getElementById('trial-status');
+    const trialFeedback = document.getElementById('trial-feedback');
+    const trialFeedbackText = document.getElementById('trial-feedback-text');
+    const trialCompare = document.getElementById('trial-compare');
+    let currentTrial = null;
+    let trialAudio = null;
+    let trialAnswered = false;
+    function pauseTrialAudio() { if (trialAudio) trialAudio.pause(); }
+    function stopTrialAudio() {
+      if (trialAudio) {
+        trialAudio.pause();
+        trialAudio.onended = null;
+        trialAudio.onerror = null;
+        trialAudio.removeAttribute('src');
+        trialAudio.load();
+        trialAudio = null;
+      }
+    }
+    async function playTrialVersion(condition) {
+      if (!currentTrial) return;
+      stopTrialAudio();
+      document.querySelectorAll('audio').forEach(player => player.pause());
+      window.parent.postMessage({type:'tryout-audio'}, '*');
+      const audio = new Audio();
+      trialAudio = audio;
+      audio.src = 'son/' + condition + '/' + currentTrial.file + '.wav';
+      trialStatus.textContent = 'Loading audio…';
+      const failed = () => {
+        if (trialAudio !== audio) return;
+        trialStatus.textContent = 'Unable to play this example. Check that the WAV file is present: ' + condition + '/' + currentTrial.file + '.wav';
+      };
+      audio.onerror = failed;
+      audio.onended = () => {
+        if (trialAudio !== audio) return;
+        trialStatus.textContent = trialAnswered ? 'You can listen again or click Go for a new example.' : 'Choose your answer below.';
+        if (!trialAnswered) answerButtons.forEach(button => button.disabled = false);
+      };
+      try {
+        await audio.play();
+        if (trialAudio === audio) trialStatus.textContent = trialAnswered ? 'Playing the ' + condition + ' version…' : 'Listen to both melodies…';
+      } catch (error) { failed(); }
+    }
+    document.getElementById('trial-go').addEventListener('click', () => {
+      currentTrial = {
+        file:trialFiles[Math.floor(Math.random() * trialFiles.length)],
+        condition:Math.random() < 0.5 ? 'NH' : 'aHI'
+      };
+      trialAnswered = false;
+      trialFeedback.hidden = true;
+      trialCompare.hidden = false;
+      document.getElementById('trial-contrast').hidden = !currentTrial.file.endsWith('_aS');
+      answerButtons.forEach(button => {button.disabled = true;button.removeAttribute('aria-pressed');});
+      playTrialVersion(currentTrial.condition);
+    });
+    answerButtons.forEach(button => button.addEventListener('click', () => {
+      if (!currentTrial || trialAnswered || button.disabled) return;
+      trialAnswered = true;
+      const correctAnswer = currentTrial.file.replace(/_aS$/, '');
+      const correct = button.dataset.answer === correctAnswer;
+      answerButtons.forEach(other => {other.disabled=true;other.setAttribute('aria-pressed',String(other===button));});
+      trialFeedback.classList.toggle('incorrect', !correct);
+      trialFeedbackText.textContent = correct ? 'Correct answer!' : 'Incorrect answer. The correct answer is: ' + answerLabels[correctAnswer] + '.';
+      trialFeedback.hidden = false;
+      document.getElementById('trial-replay').textContent = 'Listen to NH version';
+      trialCompare.textContent = 'Listen to the aHI* version';
+      trialCompare.hidden = false;
+      trialStatus.textContent = 'Click Go for a new example.';
+    }));
+    document.getElementById('trial-replay').addEventListener('click', () => {
+      if (currentTrial && trialAnswered) playTrialVersion('NH');
+    });
+    trialCompare.addEventListener('click', () => {
+      if (currentTrial && trialAnswered) playTrialVersion('aHI');
+    });
+    window.addEventListener('message', event => {
+      if (event.source === window.parent && event.data?.type === 'pause-tryout') pauseTrialAudio();
+    });
+    function reportHeight() {
+      window.parent.postMessage({type:'tryout-height',height:Math.ceil(document.body.getBoundingClientRect().height)}, '*');
+    }
+    new ResizeObserver(reportHeight).observe(document.body);
+    reportHeight();
+</script></body></html>

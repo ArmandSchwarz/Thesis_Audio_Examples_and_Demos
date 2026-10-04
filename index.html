@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Experiments from Armand Schwarz’s thesis: audio examples and interactive demonstrations.">
+  <title>Thesis experiments · Armand Schwarz</title>
+  <style>
+    :root { --ink: #18352f; --muted: #626e68; --paper: #f8f7f2; --line: #dce2d9; --accent: #27715c; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 105px; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.7 system-ui, sans-serif; }
+    a { color: inherit; }
+    a:focus-visible { outline: 3px solid #b66d28; outline-offset: 5px; }
+    .skip { position: fixed; left: 16px; top: -100px; z-index: 10; background: white; padding: 10px; }
+    .skip:focus { top: 12px; }
+    header { position: sticky; top: 0; z-index: 5; background: #f8f7f2f5; border-bottom: 1px solid var(--line); }
+    .nav { max-width: 1120px; margin: auto; padding: 17px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { text-decoration: none; font-weight: 650; font-size: 15px; white-space: nowrap; }
+    nav { display: flex; gap: 23px; flex-wrap: wrap; }
+    nav a { font-size: 14px; text-decoration: none; color: var(--muted); }
+    nav a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 5px; }
+    main { max-width: 1120px; margin: auto; padding: 0 28px; }
+    .intro { padding: 75px 0 65px; }
+    .eyebrow { margin: 0 0 17px; color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    h1, h2 { font-family: Georgia, serif; font-weight: 400; line-height: 1.15; }
+    h1 { font-size: clamp(28px, 4vw, 44px); max-width: 100%; margin: 0 0 25px; letter-spacing: -.035em; }
+    .lead { max-width: 720px; font-size: 19px; color: var(--muted); }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 42px; }
+    .card { display: flex; flex-direction: column; padding: 25px; border: 1px solid var(--line); border-radius: 14px; text-decoration: none; background: white; transition: transform .2s, border-color .2s; }
+    .card:hover { transform: translateY(-4px); border-color: var(--accent); }
+    .number { color: var(--accent); font-size: 13px; font-weight: 600; }
+    .card h3 { font-size: 20px; line-height: 1.35; font-weight: 600; margin: 16px 0 10px; }
+    .card p { font-size: 15px; color: var(--muted); margin: 0 0 22px; }
+    .card .link { margin-top: auto; font-size: 14px; color: var(--accent); }
+    .experiment { padding: 62px 0 68px; border-top: 1px solid var(--line); }
+    h2 { font-size: clamp(30px, 4vw, 43px); margin: 0 0 20px; letter-spacing: -.025em; }
+    .description { max-width: 720px; color: var(--muted); }
+    .placeholder { margin-top: 30px; padding: 28px 30px; border-radius: 12px; background: #edf1e9; border: 1px dashed #c5d1c0; }
+    .placeholder strong { display: block; font-size: 15px; font-weight: 600; }
+    .placeholder p { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+    .back { display: inline-block; margin-top: 24px; font-size: 14px; color: var(--accent); text-underline-offset: 4px; }
+    footer { max-width: 1120px; margin: auto; padding: 28px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 15px; }
+    @media (max-width: 760px) {
+      .nav { align-items: flex-start; flex-direction: column; gap: 9px; padding: 12px 20px; }
+      nav { gap: 10px 18px; }
+      nav a { font-size: 13px; }
+      main { padding: 0 20px; }
+      .intro { padding-top: 44px; }
+      .cards { grid-template-columns: 1fr; }
+      .card { padding: 20px; }
+      .experiment { padding: 44px 0; }
+      footer { flex-direction: column; padding: 24px 20px; }
+      html { scroll-padding-top: 140px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .card { transition: none; } }
+
+    .subnav { display: flex; gap: 12px; margin: 26px 0 36px; flex-wrap: wrap; }
+    .subnav a { padding: 8px 19px; background: white; border: 1px solid var(--line); border-radius: 24px; text-decoration: none; font-size: 15px; }
+    .subnav a:hover { border-color: var(--accent); color: var(--accent); }
+    .subsection { padding-top: 28px; }
+    .subsection + .subsection { margin-top: 45px; border-top: 1px solid var(--line); }
+    .subsection > h3 { font-family: Georgia, serif; font-size: 31px; font-weight: 400; margin: 0 0 15px; }
+    h4 { font-size: 19px; font-weight: 600; margin: 28px 0 10px; }
+    figure { margin: 22px 0 38px; max-width: 850px; }
+    figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    figcaption { font-size: 14px; color: var(--muted); margin-top: 10px; }
+    .audio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 24px; }
+    .sound { display: flex; gap: 18px; align-items: center; padding: 18px 20px; background: white; border: 1px solid var(--line); border-radius: 12px; }
+    .sound h5 { min-width: 37px; margin: 0; font-size: 17px; font-weight: 600; }
+    audio { width: 100%; min-width: 0; height: 40px; }
+    .media-message { padding: 20px; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; font-size: 14px; }
+    @media (max-width: 760px) { .audio-grid { grid-template-columns: 1fr; } .sound { padding: 14px; gap: 10px; } }
+
+    .sort-controls { display:flex; flex-wrap:wrap; gap:10px; margin:20px 0 10px; }
+    button { font:inherit; font-size:14px; cursor:pointer; padding:9px 16px; border:1px solid var(--line); border-radius:22px; color:var(--ink); background:white; }
+    button[aria-pressed="true"] { background:var(--accent); color:white; border-color:var(--accent); }
+    button:disabled { opacity:.45; cursor:default; }
+    button:focus-visible, input:focus-visible { outline:3px solid #b66d28; outline-offset:4px; }
+    .csv-status { font-size:14px; color:var(--muted); }
+    .csv-import { margin:15px 0; font-size:14px; }
+    .csv-import label { display:block; margin-bottom:6px; }
+    .comparison-scroll { overflow-x:auto; margin-top:22px; }
+    .comparison { width:100%; min-width:650px; border-collapse:separate; border-spacing:0 10px; }
+    .comparison th { text-align:left; font-size:14px; color:var(--muted); padding:8px 14px; }
+    .comparison td { background:white; padding:16px 14px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .comparison td:first-child { border-left:1px solid var(--line); border-radius:12px 0 0 12px; width:180px; }
+    .comparison td:last-child { border-right:1px solid var(--line); border-radius:0 12px 12px 0; }
+    .comparison .audio-cell { width:40%; }
+    .row-value, .range-label { display:block; font-size:12px; line-height:1.5; color:var(--muted); }
+    .range-label { color:var(--accent); font-weight:600; margin-top:5px; }
+    .loudness-scroll {
+      overflow-x: auto;
+      margin-top: 24px;
+    }
+    .loudness-comparison {
+      display: grid;
+      grid-template-columns: 150px repeat(3, minmax(240px, 1fr));
+      gap: 14px 18px;
+      align-items: center;
+      min-width: 924px;
+    }
+    .loudness-heading {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .loudness-parameters {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .loudness-parameters span {
+      display: block;
+    }
+    .loudness-comparison .sound {
+      padding: 12px;
+      gap: 8px;
+    }
+    .loudness-comparison .sound h5 {
+      min-width: 35px;
+    }
+
+    .audio-warning {
+      margin: 20px 0 30px;
+      padding: 18px 22px;
+      border: 1px solid #e9c7c3;
+      border-left: 4px solid #bc7069;
+      border-radius: 10px;
+      background: #fbefed;
+      color: #78443e;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .audio-warning strong { display: block; margin-bottom: 5px; }
+    .audio-warning p { margin: 0; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#contenu">Skip to content</a>
+  <header>
+    <div class="nav">
+      <a class="brand" href="#introduction">Armand Schwarz · Thesis</a>
+      <nav aria-label="Page sections">
+        <a href="#introduction">Introduction</a>
+        <a href="#sonie-timbre">Loudness and timbre</a>
+        <a href="#multi-flux">Two-stream attention</a>
+        <a href="#local-global">Local-global</a>
+      </nav>
+    </div>
+  </header>
+  <main id="contenu">
+    <section class="intro" id="introduction" aria-labelledby="titre-introduction">
+      <p class="eyebrow">Audio examples and interactive demonstrations</p>
+      <h1 id="titre-introduction">Perceptual distortions in aided hearing-impaired hearing:<br>Consequences for Auditory Attention and Temporal Processing of auditory scenes</h1>
+      <p class="lead">This page accompanies the thesis with audio examples, task instructions, and illustrations from its three experimental parts.</p>
+      <p class="description">Choose an experiment to go directly to its section.</p>
+      <div class="cards">
+        <a class="card" href="#sonie-timbre">
+          <span class="number">01</span>
+          <h3>Loudness and timbre</h3>
+          <p>Explore the sounds used in the loudness and timbre experiments (<em>chapter 2</em>).</p>
+          <span class="link">Explore this section →</span>
+        </a>
+        <a class="card" href="#multi-flux">
+          <span class="number">02</span>
+          <h3>Attention in two sound streams</h3>
+          <p>Discover the detection task and the distracting events (<em>chapter 3</em>).</p>
+          <span class="link">Explore this section →</span>
+        </a>
+        <a class="card" href="#local-global">
+          <span class="number">03</span>
+          <h3>Local-global processing</h3>
+          <p>Listen to the pitch patterns and explore their structure (<em>chapter 4</em>).</p>
+          <span class="link">Explore this section →</span>
+        </a>
+      </div>
+      <aside class="audio-warning" aria-label="Audio volume warning">
+      <strong>Warning — audio volume</strong>
+      <p>All sounds on this page have been peak-normalized to an amplitude of 1. Start with a low output volume and increase it gradually to a comfortable listening level.</p>
+      </aside>
+    </section>
+    <section class="experiment" id="sonie-timbre" aria-labelledby="titre-sonie">
+      <p class="eyebrow">Experimental part 01</p>
+      <h2 id="titre-sonie">Loudness and timbre</h2>
+      <p class="description">This section brings together two experiments investigating loudness and timbre perception (<em>Chapter 2</em>). Explore the loudness experiment below, or jump to the timbre experiment.</p>
+      <nav class="subnav" aria-label="Loudness and timbre experiments">
+        <a href="#loudness">Loudness experiment</a>
+        <a href="#timbre">Timbre experiment</a>
+      </nav>
+      <section class="subsection" id="loudness" aria-labelledby="title-loudness">
+        <h3 id="title-loudness">Loudness experiment</h3>
+        <p class="description">In this experiment, listeners rated the perceived loudness of 14 sounds with specific timbres presented at different levels (from -10 to 100 dB). The response interface and the 14 sounds are provided below to illustrate the task and its stimuli.</p>
+        <h4>Response interface</h4>
+        <p class="description">The screenshot below shows the interface used to collect participants’ loudness ratings. After each presentation, participants clicked on the category that best matched the loudness of the sound. Each sound was presented at approximately 30 different levels. Loudness functions were measured separately for each sound. Participants could take a break between measurements of successive loudness functions.</p>
+        <figure>
+          <img src="Sonie_et_timbre/Sonie/Interface_reponse.png"
+              alt="Response interface used in the loudness experiment"
+              loading="lazy"
+              id="loudness-interface">
+
+          <p class="media-message" id="interface-unavailable" hidden>
+            The response interface image will appear here when the experimental materials are added.
+          </p>
+
+          <figcaption>
+            <p>Response interface for the loudness experiment. English translations:</p>
+
+            <table style="border-collapse: collapse; font-size: inherit;">
+              <thead>
+                <tr>
+                  <th scope="col" style="text-align: left; padding: 4px 24px 4px 0;">French</th>
+                  <th scope="col" style="text-align: left; padding: 4px 0;">English</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Trop fort</td><td>Too loud</td></tr>
+                <tr><td>Très fort</td><td>Very loud</td></tr>
+                <tr><td>Fort</td><td>Loud</td></tr>
+                <tr><td>Moyen</td><td>Medium</td></tr>
+                <tr><td>Faible</td><td>Soft</td></tr>
+                <tr><td>Très faible</td><td>Very soft</td></tr>
+                <tr><td>Non perçu</td><td>Inaudible</td></tr>
+              </tbody>
+            </table>
+
+            <p>
+              <strong>Instruction:</strong>
+              <em>“Indicate how loud the sound seemed to you.”</em>
+            </p>
+          </figcaption>
+        </figure>
+        <h4>Listen to the sounds</h4>
+        <p class="description">
+          Listen to the 14 sounds below. Each row groups sounds with the same
+          spectral center frequency (fcs) and attack time (AT).
+          The labels B1–B6, R1–R6, and FX1–FX2 match those used in
+          <em>chapter 2</em> of the thesis.
+        </p>
+
+        <div class="loudness-scroll">
+          <div class="loudness-comparison">
+
+            <!-- Column headings -->
+            <div></div>
+            <div class="loudness-heading">Basic sounds</div>
+            <div class="loudness-heading">Rough sounds</div>
+            <div class="loudness-heading">Sounds with spectral flux</div>
+
+            <!-- Row 1 -->
+            <div class="loudness-parameters">
+              <span>fcs = 500 Hz</span>
+              <span>AT = 0.02 s</span>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-0">B1</h5>
+              <audio controls preload="none" aria-labelledby="sound-0">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_0.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-6">R1</h5>
+              <audio controls preload="none" aria-labelledby="sound-6">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_6.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-12">FX1</h5>
+              <audio controls preload="none" aria-labelledby="sound-12">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_12.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="loudness-parameters">
+              <span>fcs = 1000 Hz</span>
+              <span>AT = 0.15 s</span>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-1">B2</h5>
+              <audio controls preload="none" aria-labelledby="sound-1">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_1.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-7">R2</h5>
+              <audio controls preload="none" aria-labelledby="sound-7">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_7.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div aria-hidden="true"></div>
+
+            <!-- Row 3 -->
+            <div class="loudness-parameters">
+              <span>fcs = 1500 Hz</span>
+              <span>AT = 0.3 s</span>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-2">B3</h5>
+              <audio controls preload="none" aria-labelledby="sound-2">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_2.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-8">R3</h5>
+              <audio controls preload="none" aria-labelledby="sound-8">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_8.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div aria-hidden="true"></div>
+
+            <!-- Row 4 -->
+            <div class="loudness-parameters">
+              <span>fcs = 2000 Hz</span>
+              <span>AT = 0.15 s</span>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-3">B4</h5>
+              <audio controls preload="none" aria-labelledby="sound-3">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_3.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-9">R4</h5>
+              <audio controls preload="none" aria-labelledby="sound-9">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_9.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div aria-hidden="true"></div>
+
+            <!-- Row 5 -->
+            <div class="loudness-parameters">
+              <span>fcs = 3000 Hz</span>
+              <span>AT = 0.02 s</span>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-4">B5</h5>
+              <audio controls preload="none" aria-labelledby="sound-4">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_4.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-10">R5</h5>
+              <audio controls preload="none" aria-labelledby="sound-10">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_10.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-13">FX2</h5>
+              <audio controls preload="none" aria-labelledby="sound-13">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_13.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <!-- Row 6 -->
+            <div class="loudness-parameters">
+              <span>fcs = 4000 Hz</span>
+              <span>AT = 0.3 s</span>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-5">B6</h5>
+              <audio controls preload="none" aria-labelledby="sound-5">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_5.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div class="sound">
+              <h5 id="sound-11">R6</h5>
+              <audio controls preload="none" aria-labelledby="sound-11">
+                <source src="Sonie_et_timbre/Sonie/son_graine/son_11.wav" type="audio/wav">
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+
+            <div aria-hidden="true"></div>
+
+          </div>
+        </div>
+        </section>
+      <section class="subsection" id="timbre" aria-labelledby="title-timbre">
+        <h3 id="title-timbre">Timbre experiment</h3>
+        <p class="description">This experiment investigated how listeners perceived timbre. Participants heard every possible combination of the 20 sounds presented next and had to judge the perceive differences in each pairs. They could listen to each sound twice. The interface used for this experiment is showed bellow.</p>
+        <h4>Response interface</h4>
+        <figure>
+          <img src="Sonie_et_timbre/timbre/Interface_reponse.png" alt="Response interface used in the timbre experiment" loading="lazy" id="timbre-interface">
+          <p class="media-message" id="timbre-interface-unavailable" hidden>The response interface image will appear here when the experimental materials are added.</p>
+          <figcaption>Response interface for the timbre experiment.</figcaption>
+        </figure>
+        <h4>Listen to the sounds</h4>
+        <p class="description">Each row contains two versions of the same sound: the normal-hearing version (NH) on the left and the simulated aided hearing-impaired version (aHI*). The sounds were synthesysed using 4 parameters : fcs, used to change the brightness of the sound, m, used to do an amplitude modulation in the sound, attack time (AT), and sdiff, used to induce spectral flux in the sounds. The 20 sounds used random combination of this 4 parameters. Participants did either the experiment with the NH sounds (yNH, oNH groups) or with the aHI* sounds (aHI* group). The real aided Hearing-impaired group (aHI) used sounds only with the hearing aid simulator. No participants heard the aHI* and the NH sounds. As the sounds were equalized in loudness (which they are not here anymore), in pitch and in duration, they only could use the timbral dimension to make their judgment. Use the buttons to arrange the pairs from low to high values of each acoustic parameter.</p>
+        <div class="sort-controls" role="group" aria-label="Sort sounds in ascending order">
+          <button type="button" data-sort="index" aria-pressed="true">Original order</button>
+          <button type="button" data-sort="fcs" aria-pressed="false" disabled>Sort by fcs</button>
+          <button type="button" data-sort="m" aria-pressed="false" disabled>Sort by m</button>
+          <button type="button" data-sort="AT" aria-pressed="false" disabled>Sort by AT</button>
+          <button type="button" data-sort="sdiff" aria-pressed="false" disabled>Sort by sdiff</button>
+        </div>
+        <p class="csv-status" id="csv-status" role="status">Loading sound parameters…</p>
+        <div class="comparison-scroll">
+          <table class="comparison" aria-label="Paired NH and aHI timbre examples">
+            <thead><tr><th scope="col">Sound</th><th scope="col">NH</th><th scope="col">aHI</th></tr></thead>
+            <tbody id="timbre-rows">
+            <tr data-sound="son_0" data-index="0">
+              <td><strong>Sound 1</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 1, NH"><source src="Sonie_et_timbre/timbre/NH/son_0.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 1, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_0.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_1" data-index="1">
+              <td><strong>Sound 2</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 2, NH"><source src="Sonie_et_timbre/timbre/NH/son_1.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 2, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_1.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_2" data-index="2">
+              <td><strong>Sound 3</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 3, NH"><source src="Sonie_et_timbre/timbre/NH/son_2.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 3, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_2.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_3" data-index="3">
+              <td><strong>Sound 4</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 4, NH"><source src="Sonie_et_timbre/timbre/NH/son_3.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 4, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_3.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_4" data-index="4">
+              <td><strong>Sound 5</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 5, NH"><source src="Sonie_et_timbre/timbre/NH/son_4.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 5, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_4.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_5" data-index="5">
+              <td><strong>Sound 6</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 6, NH"><source src="Sonie_et_timbre/timbre/NH/son_5.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 6, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_5.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_6" data-index="6">
+              <td><strong>Sound 7</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 7, NH"><source src="Sonie_et_timbre/timbre/NH/son_6.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 7, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_6.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_7" data-index="7">
+              <td><strong>Sound 8</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 8, NH"><source src="Sonie_et_timbre/timbre/NH/son_7.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 8, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_7.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_8" data-index="8">
+              <td><strong>Sound 9</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 9, NH"><source src="Sonie_et_timbre/timbre/NH/son_8.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 9, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_8.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_9" data-index="9">
+              <td><strong>Sound 10</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 10, NH"><source src="Sonie_et_timbre/timbre/NH/son_9.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 10, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_9.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_10" data-index="10">
+              <td><strong>Sound 11</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 11, NH"><source src="Sonie_et_timbre/timbre/NH/son_10.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 11, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_10.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_11" data-index="11">
+              <td><strong>Sound 12</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 12, NH"><source src="Sonie_et_timbre/timbre/NH/son_11.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 12, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_11.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_12" data-index="12">
+              <td><strong>Sound 13</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 13, NH"><source src="Sonie_et_timbre/timbre/NH/son_12.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 13, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_12.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_13" data-index="13">
+              <td><strong>Sound 14</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 14, NH"><source src="Sonie_et_timbre/timbre/NH/son_13.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 14, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_13.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_14" data-index="14">
+              <td><strong>Sound 15</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 15, NH"><source src="Sonie_et_timbre/timbre/NH/son_14.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 15, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_14.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_15" data-index="15">
+              <td><strong>Sound 16</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 16, NH"><source src="Sonie_et_timbre/timbre/NH/son_15.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 16, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_15.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_16" data-index="16">
+              <td><strong>Sound 17</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 17, NH"><source src="Sonie_et_timbre/timbre/NH/son_16.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 17, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_16.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_17" data-index="17">
+              <td><strong>Sound 18</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 18, NH"><source src="Sonie_et_timbre/timbre/NH/son_17.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 18, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_17.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_18" data-index="18">
+              <td><strong>Sound 19</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 19, NH"><source src="Sonie_et_timbre/timbre/NH/son_18.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 19, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_18.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            <tr data-sound="son_19" data-index="19">
+              <td><strong>Sound 20</strong><span class="row-value"></span><span class="range-label"></span></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 20, NH"><source src="Sonie_et_timbre/timbre/NH/son_19.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+              <td class="audio-cell"><audio controls preload="none" aria-label="Sound 20, aHI"><source src="Sonie_et_timbre/timbre/aHI/son_19.wav" type="audio/wav">Your browser does not support audio playback.</audio></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <a class="back" href="#introduction">↑ Back to introduction</a>
+    </section>
+    <section class="experiment" id="multi-flux" aria-labelledby="titre-multi">
+      <p class="eyebrow">Experimental part 02</p>
+      <h2 id="titre-multi">Attention in two sound streams</h2>
+      <p class="description">This section will introduce the selective attention task of chapter 3. Participants had to detect targets in one sound stream while ignoring a second stream. You can first read the instructions as the participants did, and then you can try the experiment out yourself.</p>
+      <h3>Task instructions</h3>
+      <p class="description">Read the original French instructions or their English translation. Use the arrows to move through the three slides and listen to the audio examples.</p>
+      <div class="sort-controls" role="group" aria-label="Two-stream instruction language">
+        <button type="button" data-multi-language="fr" aria-pressed="false">Français — original participant instructions</button>
+        <button type="button" data-multi-language="en" aria-pressed="true">English — translation</button>
+      </div>
+      <iframe id="multi-instructions-frame" title="Two-stream task instructions in English" src="multi_flux/consigne/consigne_en.html" style="width:100%;height:650px;border:1px solid var(--line);border-radius:12px;background:white;"></iframe>
+      <iframe id="multi-tryout-frame" title="Two-stream interactive target detection task" src="multi_flux/tryitout/tryitout.html" style="width:100%;height:750px;border:1px solid var(--line);border-radius:14px;background:white;margin-top:40px;"></iframe>
+      <a class="back" href="#introduction">↑ Back to introduction</a>
+    </section>
+    <section class="experiment" id="local-global" aria-labelledby="titre-local">
+      <p class="eyebrow">Experimental part 03</p>
+      <h2 id="titre-local">Local-global processing</h2>
+      <p class="description">This section will introduce the local-global task of chapter 4. Participants had to listen to pairs of melodies and compared them on the local and the global temporal scale. You can first read the instructions as the participants did, and then you can try the experiment out yourself.</p>
+      <h3>Task instructions</h3>
+      <p class="description">Explore the six instruction slides shown at the beginning of the experiment. Choose the original French slides or an English translation, and click the play buttons to listen to the examples.</p>
+      <div class="sort-controls" role="group" aria-label="Instruction language">
+        <button type="button" data-language="fr" aria-pressed="false">Français — original participant instructions</button>
+        <button type="button" data-language="en" aria-pressed="true">English — translation</button>
+      </div>
+      <iframe id="instructions-frame" title="Local-global task instructions in English" src="local_global/consigne_en.html" style="width:100%;height:650px;border:1px solid var(--line);border-radius:12px;background:white;"></iframe>
+      <iframe id="tryout-frame" title="Local-global interactive listening task" src="local_global/try_it_out/tryout_corrige.html" style="width:100%;height:550px;border:1px solid var(--line);border-radius:14px;background:white;margin-top:40px;"></iframe>
+      <a class="back" href="#introduction">↑ Back to introduction</a>
+    </section>
+  </main>
+  <footer><span>Armand Schwarz · Thesis companion · <em> This page was made with chatgtp model Sol 6.1</em></span><span>Audio examples and experimental materials</span></footer>
+  <script>
+    document.querySelectorAll('figure img').forEach(image => {
+      const fallback = image.nextElementSibling;
+      const showFallback = () => { image.style.display = 'none'; fallback.hidden = false; };
+      image.addEventListener('error', showFallback);
+      if (image.complete && image.naturalWidth === 0) showFallback();
+    });
+    document.querySelectorAll('audio').forEach(player => {
+      player.addEventListener('play', () => {
+        document.querySelectorAll('audio').forEach(other => { if (other !== player) other.pause(); });
+      });
+    });
+
+    // Embedded sound parameters; no external CSV is loaded.
+    const embeddedSoundParameters = [
+      {"sound": "son_0", "fcs": 694.575, "m": 0.45263157894736844, "AT": 0.04078755715957288, "sdiff": 3.0},
+      {"sound": "son_1", "fcs": 765.7689375000001, "m": 0.7894736842105263, "AT": 0.030671047989908336, "sdiff": 10.0},
+      {"sound": "son_2", "fcs": 1187.9589596636392, "m": 0.831578947368421, "AT": 0.05424088604969756, "sdiff": 18.0},
+      {"sound": "son_3", "fcs": 729.30375, "m": 0.28421052631578947, "AT": 0.07213164808929406, "sdiff": 6.0},
+      {"sound": "son_4", "fcs": 1131.389485393942, "m": 1.0, "AT": 0.035369437697430096, "sdiff": 7.0},
+      {"sound": "son_5", "fcs": 977.3367760664652, "m": 0.9578947368421054, "AT": 0.22559121059822893, "sdiff": 8.0},
+      {"sound": "son_6", "fcs": 1026.2036148697885, "m": 0.7052631578947368, "AT": 0.020000000000000004, "sdiff": 13.0},
+      {"sound": "son_7", "fcs": 1375.2109906806206, "m": 0.8736842105263158, "AT": 0.02659678089447297, "sdiff": 15.0},
+      {"sound": "son_8", "fcs": 886.4732662734377, "m": 0.49473684210526314, "AT": 0.06254985615161944, "sdiff": 11.0},
+      {"sound": "son_9", "fcs": 600.0, "m": 0.5789473684210527, "AT": 0.023063729487865996, "sdiff": 0.0},
+      {"sound": "son_10", "fcs": 804.0573843750002, "m": 0.3263157894736842, "AT": 0.1956242252294142, "sdiff": 16.0},
+      {"sound": "son_11", "fcs": 630.0, "m": 0.6210526315789473, "AT": 0.1106176620068959, "sdiff": 1.0},
+      {"sound": "son_12", "fcs": 661.5, "m": 0.368421052631579, "AT": 0.09592348198940914, "sdiff": 5.0},
+      {"sound": "son_13", "fcs": 1309.7247530291625, "m": 0.24210526315789474, "AT": 0.29999999999999993, "sdiff": 14.0},
+      {"sound": "son_14", "fcs": 930.7969295871096, "m": 0.5368421052631579, "AT": 0.047035659239963, "sdiff": 12.0},
+      {"sound": "son_15", "fcs": 1516.1701172253843, "m": 0.6631578947368422, "AT": 0.1696379809972482, "sdiff": 17.0},
+      {"sound": "son_16", "fcs": 844.2602535937502, "m": 0.9157894736842105, "AT": 0.08318124095227121, "sdiff": 2.0},
+      {"sound": "son_17", "fcs": 1247.3569076468214, "m": 0.2, "AT": 0.260148732803888, "sdiff": 9.0},
+      {"sound": "son_18", "fcs": 1443.9715402146517, "m": 0.7473684210526317, "AT": 0.1471036859728138, "sdiff": 4.0},
+      {"sound": "son_19", "fcs": 1077.513795613278, "m": 0.4105263157894737, "AT": 0.12756279165536194, "sdiff": 19.0}
+    ];
+    const parameters = new Map(embeddedSoundParameters.map(({sound, ...values}) => [sound, values]));
+    const tbody = document.getElementById('timbre-rows');
+    const soundRows = Array.from(tbody.rows);
+    const buttons = Array.from(document.querySelectorAll('[data-sort]'));
+    const status = document.getElementById('csv-status');
+    function sortSounds(key) {
+      if (key !== 'index' && !parameters) return;
+      document.querySelectorAll('#timbre audio').forEach(player => player.pause());
+      const sorted = [...soundRows].sort((a, b) => {
+        const difference = key === 'index' ? Number(a.dataset.index) - Number(b.dataset.index) :
+          parameters.get(a.dataset.sound)[key] - parameters.get(b.dataset.sound)[key];
+        return difference || Number(a.dataset.index) - Number(b.dataset.index);
+      });
+      sorted.forEach((row, position) => {
+        row.querySelector('.row-value').textContent = key === 'index' ? '' : key + ' = ' + parameters.get(row.dataset.sound)[key].toFixed(key === 'fcs' || key === 'sdiff' ? 0 : 3);
+        row.querySelector('.range-label').textContent = key === 'index' ? '' :
+          position === 0 ? 'Low ' + key + ' values' : position === sorted.length - 1 ? 'High ' + key + ' values' : '';
+        tbody.appendChild(row);
+      });
+      buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.sort === key)));
+      status.textContent = key === 'index' ? 'Sounds shown in their original order.' : 'Sorted by ' + key + ', from low to high values.';
+    }
+    buttons.forEach(button => button.addEventListener('click', () => sortSounds(button.dataset.sort)));
+    buttons.forEach(button => { button.disabled = false; });
+    sortSounds('index');
+    status.textContent = 'Choose a parameter to sort the pairs.';
+    const instructionsFrame = document.getElementById('instructions-frame');
+    document.querySelectorAll('[data-language]').forEach(button => {
+      button.addEventListener('click', () => {
+        const language = button.dataset.language;
+        instructionsFrame.src = 'local_global/consigne_' + language + '.html';
+        instructionsFrame.title = 'Local-global task instructions in ' + (language === 'fr' ? 'French' : 'English');
+        document.querySelectorAll('[data-language]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+      });
+    });
+    window.addEventListener('message', event => {
+      if (event.source !== instructionsFrame.contentWindow) return;
+      if (event.data?.type === 'instructions-height' && Number.isFinite(event.data.height)) {
+        instructionsFrame.style.height = Math.max(200, Math.min(2500, event.data.height + 5)) + 'px';
+      }
+      if (event.data?.type === 'instructions-audio') document.querySelectorAll('audio').forEach(player => player.pause());
+    });
+    document.querySelectorAll('audio').forEach(player => player.addEventListener('play', () => {
+      instructionsFrame.contentWindow.postMessage({type: 'pause-instructions'}, '*');
+    }));
+
+    const tryoutFrame = document.getElementById('tryout-frame');
+    window.addEventListener('message', event => {
+      if (event.source === tryoutFrame.contentWindow) {
+        if (event.data?.type === 'tryout-height' && Number.isFinite(event.data.height)) {
+          tryoutFrame.style.height = Math.max(200, Math.min(2500, event.data.height + 5)) + 'px';
+        }
+        if (event.data?.type === 'tryout-audio') {
+          document.querySelectorAll('audio').forEach(player => player.pause());
+          instructionsFrame.contentWindow.postMessage({type:'pause-instructions'}, '*');
+        }
+      }
+      if (event.source === instructionsFrame.contentWindow && event.data?.type === 'instructions-audio') {
+        tryoutFrame.contentWindow.postMessage({type:'pause-tryout'}, '*');
+      }
+    });
+    document.querySelectorAll('audio').forEach(player => player.addEventListener('play', () => {
+      tryoutFrame.contentWindow.postMessage({type:'pause-tryout'}, '*');
+    }));
+
+    const multiFrame = document.getElementById('multi-instructions-frame');
+    document.querySelectorAll('[data-multi-language]').forEach(button => button.addEventListener('click', () => {
+      const language = button.dataset.multiLanguage;
+      multiFrame.src = 'multi_flux/consigne/consigne_' + language + '.html';
+      multiFrame.title = 'Two-stream task instructions in ' + (language === 'fr' ? 'French' : 'English');
+      document.querySelectorAll('[data-multi-language]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+    }));
+    window.addEventListener('message', event => {
+      if (event.source === multiFrame.contentWindow) {
+        if (event.data?.type === 'multi-instructions-height' && Number.isFinite(event.data.height)) {
+          multiFrame.style.height = Math.max(200, Math.min(2500, event.data.height + 5)) + 'px';
+        }
+        if (event.data?.type === 'multi-instructions-audio') {
+          document.querySelectorAll('audio').forEach(player => player.pause());
+          instructionsFrame.contentWindow.postMessage({type:'pause-instructions'}, '*');
+          tryoutFrame.contentWindow.postMessage({type:'pause-tryout'}, '*');
+        }
+      }
+      if ((event.source === instructionsFrame.contentWindow && event.data?.type === 'instructions-audio') ||
+          (event.source === tryoutFrame.contentWindow && event.data?.type === 'tryout-audio')) {
+        multiFrame.contentWindow.postMessage({type:'pause-multi-instructions'}, '*');
+      }
+    });
+    document.querySelectorAll('audio').forEach(player => player.addEventListener('play', () => {
+      multiFrame.contentWindow.postMessage({type:'pause-multi-instructions'}, '*');
+    }));
+
+    const multiTryoutFrame = document.getElementById('multi-tryout-frame');
+    window.addEventListener('message', event => {
+      if (event.source === multiTryoutFrame.contentWindow) {
+        if (event.data?.type === 'multi-tryout-height' && Number.isFinite(event.data.height)) {
+          multiTryoutFrame.style.height = Math.max(200, Math.min(2500, event.data.height + 5)) + 'px';
+        }
+        if (event.data?.type === 'multi-tryout-audio') {
+          document.querySelectorAll('audio').forEach(player => player.pause());
+          instructionsFrame.contentWindow.postMessage({type:'pause-instructions'}, '*');
+          tryoutFrame.contentWindow.postMessage({type:'pause-tryout'}, '*');
+          multiFrame.contentWindow.postMessage({type:'pause-multi-instructions'}, '*');
+        }
+      }
+      if ((event.source === instructionsFrame.contentWindow && event.data?.type === 'instructions-audio') ||
+          (event.source === tryoutFrame.contentWindow && event.data?.type === 'tryout-audio') ||
+          (event.source === multiFrame.contentWindow && event.data?.type === 'multi-instructions-audio')) {
+        multiTryoutFrame.contentWindow.postMessage({type:'pause-multi-tryout'}, '*');
+      }
+    });
+    document.querySelectorAll('audio').forEach(player => player.addEventListener('play', () => {
+      multiTryoutFrame.contentWindow.postMessage({type:'pause-multi-tryout'}, '*');
+    }));
+  </script>
+</body>
+</html>
