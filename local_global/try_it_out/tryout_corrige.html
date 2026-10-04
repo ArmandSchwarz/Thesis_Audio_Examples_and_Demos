@@ -13,9 +13,9 @@
     @media(max-width:600px) { .tryout { padding:18px; } .answer-options { grid-template-columns:1fr; } }
 *{box-sizing:border-box}body{margin:0;background:#fff;color:#18352f;font:17px/1.7 system-ui,sans-serif;--ink:#18352f;--muted:#626e68;--line:#dce2d9;--accent:#27715c}button{font:inherit;font-size:14px;cursor:pointer;padding:9px 16px;border:1px solid var(--line);border-radius:22px;color:var(--ink);background:white}button:disabled{opacity:.45;cursor:default}button:focus-visible{outline:3px solid #b66d28;outline-offset:4px}.description{max-width:720px;color:var(--muted)}.tryout{margin-top:0;border:0;border-radius:0}</style></head><body>      <section class="tryout" id="local-global-tryout" aria-labelledby="tryout-title">
         <h3 id="tryout-title">Try it out</h3>
-        <p class="description">Click Go to listen to a randomly selected example and compare the local and global pitch patterns of the two melodies. Select the type of difference you hear. You can only listen once to the stimuli before giving your answer. After the feedback you can listen again to the stimuli in the normal-hearing listening condition or in the simulated aided hearing-impaired listening condition.</p>
+        <p class="description">Click Go to listen to a randomly selected example in either the normal-hearing condition (NH) or the simulated aided hearing-impaired condition (aHI*). Compare the local pitch patterns within individual sounds and the global pitch patterns across each melody, then select the type of difference you hear. Each example is played once before you answer. After receiving feedback, you can replay the same example in both listening conditions.</p>
         <div class="trial-top">
-          <span class="contrast-note" id="trial-contrast" hidden>This trial is with a local contrast modification</span>
+          <span class="contrast-note" id="trial-contrast" hidden>This example includes a local-contrast manipulation.</span>
           <span class="trial-status" id="trial-status" role="status">Ready when you are.</span>
         </div>
         <button type="button" class="go-button" id="trial-go">Go</button>
@@ -99,8 +99,8 @@
       trialFeedback.classList.toggle('incorrect', !correct);
       trialFeedbackText.textContent = correct ? 'Correct answer!' : 'Incorrect answer. The correct answer is: ' + answerLabels[correctAnswer] + '.';
       trialFeedback.hidden = false;
-      document.getElementById('trial-replay').textContent = 'Listen to NH version';
-      trialCompare.textContent = 'Listen to the aHI* version';
+      document.getElementById('trial-replay').textContent = 'Play the NH version again';
+      trialCompare.textContent = 'Play the aHI* version again';
       trialCompare.hidden = false;
       trialStatus.textContent = 'Click Go for a new example.';
     }));

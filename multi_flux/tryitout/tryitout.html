@@ -9,7 +9,7 @@
 </head>
 <body><main>
 <h1>Try it out</h1>
-<p>Focus on the sound stream that starts first. Press the <span class="key">space bar</span> when you detect a large, unusual change in that stream. Ignore changes in the other stream. Please choose first the trial, either single stream (there will be no second stream to ignore) or one of the two dual stream. There is imediate feedback in this example, as in the training done by the participants. No data is reccorded.</p>
+<p> Choose a single-stream trial or one of the two dual-stream trials, then click Start. Focus on the stream that starts first and press the <span class="key">space bar</span> whenever you detect an abrupt target change in that stream. In dual-stream trials, ignore changes in the stream that starts second. This demonstration provides immediate feedback, as in the participants’ training trials. Your responses are not saved.</p>
 <label for="trial-choice" class="selected-label">Choose a trial</label>
 <div class="controls">
 <select id="trial-choice"><option value="1">Trial single stream</option><option value="2">Trial dual stream 1</option><option value="3">Trial dual stream 2</option></select>
@@ -18,7 +18,7 @@
 <p class="status" id="status" role="status">Choose a trial, then click Go.</p>
 <div class="stage" id="stage" tabindex="-1" aria-label="Listening task"><span id="cross" class="cross" aria-hidden="true" hidden>+</span><span id="feedback" class="feedback" role="status"></span></div>
 <progress id="progress" max="1" value="0" aria-label="Trial progress"></progress><span class="time" id="time"></span>
-<p class="help">Responses are accepted within approximately 1.5 seconds after each target. Each target can be detected once.</p>
+<p class="help">A response is counted as correct if it occurs within 1.5 seconds of target onset. Only one correct response is counted per target.</p>
 <section class="results" id="results" hidden aria-labelledby="results-title"><h2 id="results-title">Trial complete</h2><p id="score"></p><p id="misses"></p><p id="false-alarms"></p><p>Click Go to repeat this trial, or choose another trial above.</p></section>
 </main><script>
 // Scoring uses the audio playback position. No responses are saved or sent.
